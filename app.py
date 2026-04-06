@@ -20,7 +20,7 @@ def init_db():
 
 init_db()
 
-app.secret_key = "secret123"   
+app.secret_key = "supersecretkey"   
 
 #login page
 @app.route('/login', methods=['GET', 'POST'])
@@ -78,6 +78,8 @@ def add_expense():
 #dashboard
 @app.route('/dashboard')
 def dashboard():
+    if 'user' not in session:
+        return redirect('/login')
     conn = get_db()
 
     # 👉 Get selected month from dropdown

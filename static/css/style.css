@@ -235,6 +235,10 @@ canvas {
     transition: 0.3s;
 }
 
+.top-right .btn {
+    margin-left: 10px;
+}
+
 /* Hover effect */
 .add-card-btn:hover {
     transform: translateY(-3px) scale(1.05);
