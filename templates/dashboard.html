@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/chart.js') }}"></script>
+</head>
+
+<body>
+
+<canvas id="bgWave"></canvas>
+
+<div class="content">
+
+<h1>📊 Expense Dashboard</h1>
+
+<div class="top-right">
+    <a href="/" class="btn">🏠 Home</a>
+</div>
+
+<!-- 🔥 TOP BAR (TOTAL + DROPDOWN) -->
+<div class="top-bar">
+
+    <div class="total-card">
+        <h><b>Total: ₹{{ total }}</b></h>
+    </div>
+
+    <form method="GET">
+        <select name="month" onchange="this.form.submit()">
+            <option value="">All Months</option>
+            {% for m in months %}
+                <option value="{{ m }}" {% if m == selected_month %}selected{% endif %}>
+                    {{ m }}
+                </option>
+            {% endfor %}
+        </select>
+    </form>
+
+</div>
+
+<!-- 🔥 CHART ROW -->
+<div class="chart-row">
+
+    <!-- Pie -->
+    <div class="chart-box">
+        <canvas id="expenseChart"></canvas>
+    </div>
+
+    <!-- Line -->
+    <div class="chart-box" style="height: 300px;">
+        <canvas id="lineChart"></canvas>
+    </div>
+
+</div>
+
+<!-- 🔥 AI INSIGHTS -->
+<div class="insight-container">
+    {% for insight in insights %}
+        <div class="ai-card">
+          <h3><b>🤖 {{ insight }}</b></h3>  
+        </div>
+    {% endfor %}
+</div>
+
+</div>
+
+<!-- 🔥 CHART SCRIPT -->
+<script>
+const labels = JSON.parse('{{ labels | tojson | safe }}');
+const values = JSON.parse('{{ values | tojson | safe }}');
+
+const dateLabels = JSON.parse('{{ date_labels | tojson | safe }}');
+const dateValues = JSON.parse('{{ date_values | tojson | safe }}');
+
+// 🔥 Highest point logic
+const maxValue = Math.max(...dateValues);
+const maxIndex = dateValues.indexOf(maxValue);
+
+const pointColors = dateValues.map((val, i) => 
+    i === maxIndex ? '#ff0000' : '#00ffc8'
+);
+
+const pointSizes = dateValues.map((val, i) => 
+    i === maxIndex ? 8 : 5
+);
+
+// 🔵 Doughnut Chart
+new Chart(document.getElementById('expenseChart'), {
+    type: 'doughnut',
+    data: {
+        labels: labels,
+        datasets: [{
+            data: values,
+            backgroundColor: [
+                '#00ffc8',
+                '#ff6384',
+                '#36a2eb',
+                '#ffce56',
+                '#8aff33'
+            ],
+            hoverOffset: 20
+        }]
+    },
+    options: {
+        animation: {
+            animateRotate: true,
+            duration: 1500
+        },
+        plugins: {
+            legend: {
+                labels: {
+                    color: '#ffffff'
+                }
+            }
+        }
+    }
+});
+
+// 🟢 Line Chart
+new Chart(document.getElementById('lineChart'), {
+    type: 'line',
+    data: {
+        labels: dateLabels,
+        datasets: [{
+            label: 'Daily Expense ₹',
+            data: dateValues,
+            borderColor: '#00ffc8',
+            backgroundColor: 'rgba(0,255,200,0.2)',
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: pointColors,
+            pointRadius: pointSizes
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                labels: {
+                    color: '#ffffff'
+                }
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        let value = context.raw;
+                        let text = "₹ " + value;
+                        if (context.dataIndex === maxIndex) {
+                            text += " 🔥 Highest";
+                        }
+                        return text;
+                    }
+                }
+            }
+        },
+        scales: {
+            x: {
+                ticks: { color: '#ffffff' }
+            },
+            y: {
+                ticks: {
+                    color: '#ffffff',
+                    callback: val => "₹" + val
+                }
+            }
+        }
+    }
+});
+</script>
+
+<script src="{{ url_for('static', filename='js/wave.js') }}"></script>
+
+</body>
+</html>

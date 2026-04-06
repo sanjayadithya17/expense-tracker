@@ -1,0 +1,366 @@
+/* Login Page */
+.login-container {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Login Card */
+.login-card {
+    background: rgba(15, 32, 39, 0.9);
+    padding: 40px;
+    border-radius: 15px;
+    width: 300px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    text-align: center;
+}
+
+/* Title */
+.login-card h2 {
+    color: #00ffc8;
+    margin-bottom: 20px;
+}
+
+/* Inputs */
+.login-card input {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    position: auto;
+    border-radius: 8px;
+    border: none;
+    outline: none;
+}
+
+/* Button */
+.login-card button {
+    width: 110%;
+    padding: 10px;
+    margin-top: 10px;
+    background: linear-gradient(135deg, #00c6ff, #0072ff);
+    color: rgb(241, 233, 233);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+.login-card button:hover {
+    transform: scale(1.05);
+}
+
+/* Error */
+.error {
+    color: rgb(255, 4, 4);
+    margin-top: 10px;
+}
+
+/* Login animation Effect*/
+/* Background animation canvas */
+#bgParticles {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: -1;
+}
+
+/* Login card glow animation */
+.login-card {
+    animation: floatCard 3s ease-in-out infinite;
+}
+
+/* Floating effect */
+@keyframes floatCard {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+}
+
+
+
+
+
+/*original code*/
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI',sans-serif;
+    background: linear-gradient(135deg, #0f2027);
+    height: 100vh;
+    text-align: center;
+}
+/* Canvas background */
+#bgCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: -1;
+}
+
+/* Content above animation */
+.content {
+    position: relative;
+    z-index: 1;
+}
+h{
+    color: black;
+}
+
+
+h1, h2 {
+    color: #bbb207;
+}
+
+h3{
+    color:rgb(186, 180, 8);
+}
+li{
+    color:rgb(60, 255, 0);
+}
+table {
+    margin: 10px auto;
+    border-collapse: collapse;
+    width: 80%;
+    background: rgb(51, 203, 216);
+}
+
+
+.btn {
+    display: inline-block;
+    margin: 15px;
+    padding: 10px 15px;
+    background: #12b0b0;
+    color: rgb(2, 6, 7);
+    text-decoration: none;
+    border-radius: 5px;
+}
+/* Top right button */
+.top-right {
+    position:absolute;
+    top: 20px;
+    right:0cap;
+}
+
+/* Chart container */
+.chart-container {
+    width: 300px;
+    margin: 20px auto;
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+}
+
+/* Card */
+.card {
+    background: white;
+    padding: 15px;
+    margin: 20px auto;
+    width: 250px;
+    border-radius: 10px;
+}
+
+form {
+    display: inline-block;
+    background:#0f2027;
+    padding: 20px;
+    margin-top: 20px;
+    border-radius: 10px;
+}
+
+input, select {
+    display: block;
+    margin: 10px auto;
+    padding: 10px;
+    width: 220px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+button {
+    background: #4CAF50;
+    color: white;
+    padding: 10px;
+    border: none;
+    cursor: pointer;
+}
+
+input::placeholder {
+    font-weight: bold;
+    color: #333;
+}
+
+label {
+    display: block;
+    color: #00c6ff;
+    text-align: left;
+    margin-left: 10px;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+a{
+    color: #fcf000;
+}
+
+.card {
+    background: rgb(186, 216, 34);
+    padding: 15px;
+    margin: 20px auto;
+    width: 250px;
+    border-radius: 10px;
+    animation: fadeIn 1s ease-in-out;
+}
+
+canvas {
+    background: #0f2027;
+    padding: 10px;
+    border-radius: 10px;
+    margin-top: 20px;
+}
+
+.add-card-btn {
+    display: inline-block;
+    padding: 15px 25px;
+    margin: 20px;
+    background: linear-gradient(135deg, #00c6ff, #177291);
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 12px;
+    text-decoration: none;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    transition: 0.3s;
+}
+
+/* Hover effect */
+.add-card-btn:hover {
+    transform: translateY(-3px) scale(1.05);
+    background: linear-gradient(135deg, #0072ff, #00c6ff);
+}
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+
+table {
+    margin: 10px auto;
+    border-collapse: collapse;
+    width: 80%;
+    background: rgb(51, 216, 205);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+/* Remove borders */
+th, td {
+    padding: 12px;
+    border: none;
+}
+
+/* Header */
+th {
+    background: #4CAF50;
+    color: white;
+}
+
+/* Row separator subtle */
+tr:not(:last-child) {
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+/* Hover effect */
+tr:hover {
+    background: rgba(255,255,255,0.3);
+}
+
+
+
+
+/* Insight Card */
+.insight-card {
+    background: rgba(130, 34, 34, 0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    backdrop-filter: blur(10px);
+    padding: 15px;
+    margin: 20px auto;
+    width: 300px;
+    border-radius: 12px;
+    color: white;
+}
+
+/* Wave canvas */
+#bgWave {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: -1;
+}
+
+
+.chart-row {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+/* Pie smaller */
+.chart-box:first-child {
+    width: 320px;
+    height:auto;
+}
+
+/* Line chart bigger */
+.chart-box:last-child {
+    width: 640px;
+}
+
+/* Common box */
+.chart-box {
+    background: #0f2027;
+    padding: 15px;
+    border-radius: 12px;
+}
+
+/* Top bar layout */
+.top-bar {
+    display:auto;
+    justify-content: space-between;
+    align-items: center;
+    width: 20%;
+    margin: 20px auto;
+    font-size:larger;
+}
+
+/* Blue total card */
+.total-card {
+    background: linear-gradient(135deg, #00ff44, #00c6ff);
+    padding: 12px 20px;
+    border-radius: 10px;
+    color: rgb(31, 165, 105);
+    font-weight: bold;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+}
+
+/* Dropdown style upgrade */
+select {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: none;
+    font-weight: bold;
+    background: #00ffc8;
+    color: black;
+    cursor: pointer;
+}

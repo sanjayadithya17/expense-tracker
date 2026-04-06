@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Expense Tracker</title>
+        <link rel="stylesheet" href="{{url_for('static',filename='css/style.css')}}">
+    </head>
+<body>
+
+<canvas id="bgCanvas"></canvas>
+
+<div class="content">
+    <h1>💰 Expense Tracker</h1>
+
+    <div class="top-right">
+        <a href="/dashboard" class="btn">📊 Dashboard</a>
+    </div>
+
+    <a href="/add" class="add-card-btn">+ Add Expense</a>
+
+    <table>
+        <tr>
+            <th>Amount</th>
+            <th>Category</th>
+            <th>Date</th>
+            <th>Description</th>
+        </tr>
+
+        {% for exp in expenses %}
+        <tr>
+            <td><b>₹{{ exp.amount }}</b></td>
+            <td><b>{{ exp.category }}</b></td>
+            <td><b>{{ exp.date }}</b></td>
+            <td><b>{{ exp.description }}</b></td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+<script src="{{ url_for('static', filename='js/bg.js') }}"></script>
+
+</body>
+</html>
