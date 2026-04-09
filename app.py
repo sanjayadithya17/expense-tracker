@@ -150,7 +150,7 @@ def add_expense():
 
         cur.execute(
             "INSERT INTO expenses (user_id, amount, category, date, description) VALUES (%s, %s, %s, %s, %s)",
-            (session['user'], amount, category, date, description)
+            (session['user_id'], amount, category, date, description)
         )
 
         conn.commit()
