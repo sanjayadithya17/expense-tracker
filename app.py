@@ -1,32 +1,37 @@
-from flask import Flask,session,request,render_template,redirect,url_for
-import sqlite3
+from flask import Flask, session, request, render_template, redirect
+import psycopg2
+import os
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
 
-# DB CONNECTION
+# ---------------- DB CONNECTION ----------------
 def get_db():
-    connection = sqlite3.connect('database.db')
-    connection.row_factory = sqlite3.Row
-    return connection
+    DATABASE_URL = os.environ.get("DATABASE_URL")
+    conn = psycopg2.connect(DATABASE_URL)
+    return conn
 
-#  INIT DB (UPDATED FOR MULTI USER)
+# ---------------- INIT DB ----------------
 def init_db():
-    connection = get_db()
+    conn = get_db()
+    cur = conn.cursor()
 
-    #  USERS TABLE
-    connection.execute("""
+    cur.execute("DROP TABLE IF EXISTS users")
+    cur.execute("DROP TABLE IF EXISTS expenses")
+
+    # Users table
+    cur.execute("""
     CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         username TEXT UNIQUE,
         password TEXT
     )
     """)
 
-    # EXPENSE TABLE (UPDATED with user_id)
-    connection.execute("""
+    # Expenses table
+    cur.execute("""
     CREATE TABLE IF NOT EXISTS expenses (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         user_id INTEGER,
         amount REAL,
         category TEXT,
@@ -35,36 +40,40 @@ def init_db():
     )
     """)
 
-    connection.commit()
-    connection.close()
+    conn.commit()
+    cur.close()
+    conn.close()
 
-#  CALL INIT
 init_db()
 
-#-------------- Signup-----------------
-@app.route('/signup', methods=['GET','POST'])
+# ---------------- SIGNUP ----------------
+@app.route('/signup', methods=['GET', 'POST'])
 def signup():
-    error = None
-
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
 
+        conn = get_db()
+        cur = conn.cursor()
+
         try:
-            conn = get_db()
-            conn.execute(
-                "INSERT INTO users (username, password) VALUES (?, ?)",
+            cur.execute(
+                "INSERT INTO users (username, password) VALUES (%s, %s)",
                 (username, password)
             )
             conn.commit()
-            conn.close()
-
-            return redirect('/login')
-
         except:
-            error = "Username already exists ❌"
+            conn.rollback()
+            return "User already exists ❌"
 
-    return render_template('signup.html', error=error)
+        cur.close()
+        conn.close()
+
+        return redirect('/login')
+
+    return render_template('signup.html')
+
+
 # ---------------- LOGIN ----------------
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -75,22 +84,25 @@ def login():
         password = request.form['password']
 
         conn = get_db()
+        cur = conn.cursor()
 
-        user = conn.execute(
-            "SELECT * FROM users WHERE username=? AND password=?",
+        cur.execute(
+            "SELECT * FROM users WHERE username=%s AND password=%s",
             (username, password)
-        ).fetchone()
+        )
+        user = cur.fetchone()
 
+        cur.close()
         conn.close()
 
         if user:
-            session['user_id'] = user['id']   
-            session['user'] = user['username']
+            session['user'] = user[0]  # store user_id
             return redirect('/')
         else:
             error = "Invalid Username or Password ❌"
 
     return render_template('login.html', error=error)
+
 
 # ---------------- LOGOUT ----------------
 @app.route('/logout')
@@ -100,42 +112,50 @@ def logout():
 
 
 # ---------------- HOME ----------------
-@app.route("/")
-@app.route("/home")
+@app.route('/')
+@app.route('/home')
 def index():
     if 'user' not in session:
         return redirect('/login')
-    user_id=session['user_id']
 
-    connection = get_db()
+    conn = get_db()
+    cur = conn.cursor()
 
-    # user_id filter
-    expenses = connection.execute(
-        "SELECT * FROM expenses WHERE user_id=? ORDER BY date DESC",(user_id,)
-    ).fetchall()
+    cur.execute(
+        "SELECT * FROM expenses WHERE user_id=%s ORDER BY date DESC",
+        (session['user'],)
+    )
+    expenses = cur.fetchall()
 
-    connection.close()
+    cur.close()
+    conn.close()
+
     return render_template('index.html', expenses=expenses)
 
 
 # ---------------- ADD EXPENSE ----------------
-@app.route('/add', methods=["GET","POST"])
+@app.route('/add', methods=["GET", "POST"])
 def add_expense():
+    if 'user' not in session:
+        return redirect('/login')
+
     if request.method == "POST":
         amount = request.form['amount']
         category = request.form['category']
         date = request.form['date']
         description = request.form["description"]
-        user_id=session['user_id']
 
-        connection = get_db()
-        connection.execute(
-            "INSERT INTO expenses(user_id, amount, category, date, description) VALUES (?, ?, ?, ?, ?)",
-            (user_id, amount, category, date, description)
+        conn = get_db()
+        cur = conn.cursor()
+
+        cur.execute(
+            "INSERT INTO expenses (user_id, amount, category, date, description) VALUES (%s, %s, %s, %s, %s)",
+            (session['user'], amount, category, date, description)
         )
 
-        connection.commit()
-        connection.close()
+        conn.commit()
+        cur.close()
+        conn.close()
 
         return redirect('/')
 
@@ -149,53 +169,53 @@ def dashboard():
         return redirect('/login')
 
     conn = get_db()
-
-    user_id = session['user_id']   
+    cur = conn.cursor()
 
     selected_month = request.args.get('month')
 
-    # Filter expenses (USER + MONTH)
     if selected_month:
-        expenses = conn.execute(
-            "SELECT * FROM expenses WHERE user_id=? AND substr(date,1,7)=?",
-            (user_id, selected_month)
-        ).fetchall()
+        cur.execute(
+            "SELECT * FROM expenses WHERE user_id=%s AND substring(date,1,7)=%s",
+            (session['user'], selected_month)
+        )
     else:
-        expenses = conn.execute(
-            "SELECT * FROM expenses WHERE user_id=?",
-            (user_id,)
-        ).fetchall()
+        cur.execute(
+            "SELECT * FROM expenses WHERE user_id=%s",
+            (session['user'],)
+        )
+
+    expenses = cur.fetchall()
 
     # Total
-    total = sum([exp['amount'] for exp in expenses])
+    total = sum([exp[2] for exp in expenses])  # amount index
 
-    #  Category analysis
+    # Category analysis
     category_data = {}
     for exp in expenses:
-        cat = exp['category']
-        category_data[cat] = category_data.get(cat, 0) + exp['amount']
+        cat = exp[3]
+        category_data[cat] = category_data.get(cat, 0) + exp[2]
 
     labels = list(category_data.keys())
     values = list(category_data.values())
 
-    #  Daily trend
+    # Daily trend
     date_data = {}
     for exp in expenses:
-        d = exp['date']
-        date_data[d] = date_data.get(d, 0) + exp['amount']
+        d = exp[4]
+        date_data[d] = date_data.get(d, 0) + exp[2]
 
     date_labels = list(date_data.keys())
     date_values = list(date_data.values())
 
-    #  Months dropdown (USER BASED)
-    months_data = conn.execute(
-        "SELECT DISTINCT substr(date,1,7) as month FROM expenses WHERE user_id=?",
-        (user_id,)
-    ).fetchall()
+    # Months dropdown
+    cur.execute(
+        "SELECT DISTINCT substring(date,1,7) FROM expenses WHERE user_id=%s",
+        (session['user'],)
+    )
+    months_data = cur.fetchall()
+    months = [row[0] for row in months_data]
 
-    months = [row['month'] for row in months_data]
-
-    #  AI Insights
+    # Insights
     insights = []
 
     if values:
@@ -205,6 +225,7 @@ def dashboard():
     if total > 5000:
         insights.append("Your total expense exceeded ₹5000 ⚠️")
 
+    cur.close()
     conn.close()
 
     return render_template(
