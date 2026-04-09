@@ -26,12 +26,12 @@
             <th>Description</th>
         </tr>
 
-        {% for exp in expenses %}
-        <tr>
-            <td><b>₹{{ exp.amount }}</b></td>
-            <td><b>{{ exp.category }}</b></td>
-            <td><b>{{ exp.date }}</b></td>
-            <td><b>{{ exp.description }}</b></td>
+       {% for exp in expenses %}
+       <tr>
+            <td><b>₹{{ exp[0] }}</b></td>
+            <td><b>{{ exp[1] }}</b></td>
+            <td><b>{{ exp[2] }}</b></td>
+            <td><b>{{ exp[3] }}</b></td>
         </tr>
         {% endfor %}
     </table>

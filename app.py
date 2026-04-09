@@ -16,10 +16,10 @@ def init_db():
     conn = get_db()
     cur = conn.cursor()
 
-    cur.execute("DROP TABLE IF EXISTS users")
-    cur.execute("DROP TABLE IF EXISTS expenses")
+    # ❌ REMOVE DROP TABLE (IMPORTANT)
+    # cur.execute("DROP TABLE IF EXISTS users")
+    # cur.execute("DROP TABLE IF EXISTS expenses")
 
-    # Users table
     cur.execute("""
     CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
@@ -28,7 +28,6 @@ def init_db():
     )
     """)
 
-    # Expenses table
     cur.execute("""
     CREATE TABLE IF NOT EXISTS expenses (
         id SERIAL PRIMARY KEY,
@@ -96,7 +95,7 @@ def login():
         conn.close()
 
         if user:
-            session['user'] = user[0]  # store user_id
+            session['user_id'] = user[0]   
             return redirect('/')
         else:
             error = "Invalid Username or Password ❌"
@@ -107,7 +106,7 @@ def login():
 # ---------------- LOGOUT ----------------
 @app.route('/logout')
 def logout():
-    session.pop('user', None)
+    session.pop('user_id', None)
     return redirect('/login')
 
 
@@ -122,7 +121,7 @@ def index():
     cur = conn.cursor()
 
     cur.execute(
-        "SELECT amount, category, date, description FROM expenses WHERE user_id = %s ORDER BY date DESC",
+        "SELECT amount, category, date, description FROM expenses WHERE user_id=%s ORDER BY date DESC",
         (session['user_id'],)
     )
 
@@ -137,7 +136,7 @@ def index():
 # ---------------- ADD EXPENSE ----------------
 @app.route('/add', methods=["GET", "POST"])
 def add_expense():
-    if 'user_id' not in session:   #  better check
+    if 'user_id' not in session:
         return redirect('/login')
 
     if request.method == "POST":
@@ -145,12 +144,7 @@ def add_expense():
         category = request.form.get('category')
         date = request.form.get('date')
         description = request.form.get("description")
-        print("Amount:",amount)
-        print("Category:",category)
-        print("Date:",date)
-        print("Description:",description)
 
-        #  Basic validation
         if not amount or not category or not date:
             return "All fields required ❌"
 
@@ -174,7 +168,7 @@ def add_expense():
 # ---------------- DASHBOARD ----------------
 @app.route('/dashboard')
 def dashboard():
-    if 'user' not in session:
+    if 'user_id' not in session:
         return redirect('/login')
 
     conn = get_db()
@@ -185,20 +179,18 @@ def dashboard():
     if selected_month:
         cur.execute(
             "SELECT * FROM expenses WHERE user_id=%s AND substring(date,1,7)=%s",
-            (session['user'], selected_month)
+            (session['user_id'], selected_month)
         )
     else:
         cur.execute(
             "SELECT * FROM expenses WHERE user_id=%s",
-            (session['user'],)
+            (session['user_id'],)
         )
 
     expenses = cur.fetchall()
 
-    # Total
-    total = sum([exp[2] for exp in expenses])  # amount index
+    total = sum([exp[2] for exp in expenses])
 
-    # Category analysis
     category_data = {}
     for exp in expenses:
         cat = exp[3]
@@ -207,7 +199,6 @@ def dashboard():
     labels = list(category_data.keys())
     values = list(category_data.values())
 
-    # Daily trend
     date_data = {}
     for exp in expenses:
         d = exp[4]
@@ -216,15 +207,13 @@ def dashboard():
     date_labels = list(date_data.keys())
     date_values = list(date_data.values())
 
-    # Months dropdown
     cur.execute(
         "SELECT DISTINCT substring(date,1,7) FROM expenses WHERE user_id=%s",
-        (session['user'],)
+        (session['user_id'],)
     )
     months_data = cur.fetchall()
     months = [row[0] for row in months_data]
 
-    # Insights
     insights = []
 
     if values:
