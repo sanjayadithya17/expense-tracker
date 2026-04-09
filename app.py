@@ -144,6 +144,10 @@ def add_expense():
         category = request.form.get('category')
         date = request.form.get('date')
         description = request.form.get("description")
+        print("Amount:",amount)
+        print("Category:",category)
+        print("Date:",date)
+        print("Description:",description)
 
         #  Basic validation
         if not amount or not category or not date:
