@@ -136,21 +136,25 @@ def index():
 # ---------------- ADD EXPENSE ----------------
 @app.route('/add', methods=["GET", "POST"])
 def add_expense():
-    if 'user' not in session:
+    if 'user_id' not in session:   #  better check
         return redirect('/login')
 
     if request.method == "POST":
-        amount = request.form['amount']
-        category = request.form['category']
-        date = request.form['date']
-        description = request.form["description"]
+        amount = request.form.get('amount')
+        category = request.form.get('category')
+        date = request.form.get('date')
+        description = request.form.get("description")
+
+        #  Basic validation
+        if not amount or not category or not date:
+            return "All fields required ❌"
 
         conn = get_db()
         cur = conn.cursor()
 
         cur.execute(
             "INSERT INTO expenses (user_id, amount, category, date, description) VALUES (%s, %s, %s, %s, %s)",
-            (session['user_id'], amount, category, date, description)
+            (session['user_id'], float(amount), category, date, description)
         )
 
         conn.commit()
