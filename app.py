@@ -9,6 +9,7 @@ app.secret_key = "supersecretkey"
 # ---------------- DB CONNECTION ----------------
 def get_db():
     DATABASE_URL = os.environ.get("DATABASE_URL")
+    print("DB_URL:",DATABASE_URL)
     conn = psycopg2.connect(DATABASE_URL)
     return conn
 
