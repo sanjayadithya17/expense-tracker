@@ -112,19 +112,20 @@ def logout():
 
 
 # ---------------- HOME ----------------
-@app.route('/')
-@app.route('/home')
+@app.route("/")
+@app.route("/home")
 def index():
-    if 'user' not in session:
+    if 'user_id' not in session:
         return redirect('/login')
 
     conn = get_db()
     cur = conn.cursor()
 
     cur.execute(
-        "SELECT * FROM expenses WHERE user_id=%s ORDER BY date DESC",
-        (session['user'],)
+        "SELECT amount, category, date, description FROM expenses WHERE user_id = %s ORDER BY date DESC",
+        (session['user_id'],)
     )
+
     expenses = cur.fetchall()
 
     cur.close()
