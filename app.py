@@ -1,5 +1,6 @@
 from flask import Flask, session, request, render_template, redirect
 import psycopg2
+import psycopg2.extras
 import os
 
 app = Flask(__name__)
@@ -16,10 +17,7 @@ def init_db():
     conn = get_db()
     cur = conn.cursor()
 
-    # ❌ REMOVE DROP TABLE (IMPORTANT)
-    # cur.execute("DROP TABLE IF EXISTS users")
-    # cur.execute("DROP TABLE IF EXISTS expenses")
-
+    # ❌ DON'T DROP TABLE (IMPORTANT)
     cur.execute("""
     CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
@@ -83,7 +81,7 @@ def login():
         password = request.form['password']
 
         conn = get_db()
-        cur = conn.cursor()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
         cur.execute(
             "SELECT * FROM users WHERE username=%s AND password=%s",
@@ -95,7 +93,7 @@ def login():
         conn.close()
 
         if user:
-            session['user_id'] = user[0]   
+            session['user_id'] = user['id']   # ✅ FIXED
             return redirect('/')
         else:
             error = "Invalid Username or Password ❌"
@@ -118,7 +116,7 @@ def index():
         return redirect('/login')
 
     conn = get_db()
-    cur = conn.cursor()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
     cur.execute(
         "SELECT amount, category, date, description FROM expenses WHERE user_id=%s ORDER BY date DESC",
@@ -172,7 +170,7 @@ def dashboard():
         return redirect('/login')
 
     conn = get_db()
-    cur = conn.cursor()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
     selected_month = request.args.get('month')
 
@@ -189,30 +187,30 @@ def dashboard():
 
     expenses = cur.fetchall()
 
-    total = sum([exp[2] for exp in expenses])
+    total = sum([exp['amount'] for exp in expenses])
 
     category_data = {}
     for exp in expenses:
-        cat = exp[3]
-        category_data[cat] = category_data.get(cat, 0) + exp[2]
+        cat = exp['category']
+        category_data[cat] = category_data.get(cat, 0) + exp['amount']
 
     labels = list(category_data.keys())
     values = list(category_data.values())
 
     date_data = {}
     for exp in expenses:
-        d = exp[4]
-        date_data[d] = date_data.get(d, 0) + exp[2]
+        d = exp['date']
+        date_data[d] = date_data.get(d, 0) + exp['amount']
 
     date_labels = list(date_data.keys())
     date_values = list(date_data.values())
 
     cur.execute(
-        "SELECT DISTINCT substring(date,1,7) FROM expenses WHERE user_id=%s",
+        "SELECT DISTINCT substring(date,1,7) as month FROM expenses WHERE user_id=%s",
         (session['user_id'],)
     )
     months_data = cur.fetchall()
-    months = [row[0] for row in months_data]
+    months = [row['month'] for row in months_data]
 
     insights = []
 
